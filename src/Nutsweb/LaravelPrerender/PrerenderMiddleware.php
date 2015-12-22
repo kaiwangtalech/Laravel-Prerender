@@ -91,6 +91,7 @@ class PrerenderMiddleware implements HttpKernelInterface
      */
     public function handle(SymfonyRequest $request, $type = self::MASTER_REQUEST, $catch = true)
     {
+	SymfonyRequest::setTrustedProxies(array($request->getClientIp()));
         if ($this->shouldShowPrerenderedPage($request)) {
             $prerenderedResponse = $this->getPrerenderedPageResponse($request);
             if ($prerenderedResponse) {
