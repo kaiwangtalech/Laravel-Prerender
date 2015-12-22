@@ -91,14 +91,14 @@ class PrerenderMiddleware implements HttpKernelInterface
      */
     public function handle(SymfonyRequest $request, $type = self::MASTER_REQUEST, $catch = true)
     {
-	SymfonyRequest::setTrustedProxies(array($request->getClientIp()));
+        SymfonyRequest::setTrustedProxies(array($request->getClientIp()));
+       
         if ($this->shouldShowPrerenderedPage($request)) {
             $prerenderedResponse = $this->getPrerenderedPageResponse($request);
             if ($prerenderedResponse) {
                 return $this->buildSymfonyResponseFromGuzzleResponse($prerenderedResponse);
             }
         }
-
         return $this->app->handle($request, $type, $catch);
     }
 
@@ -176,7 +176,7 @@ class PrerenderMiddleware implements HttpKernelInterface
         } catch (RequestException $exception) {
             // In case of an exception, we only throw the exception if we are in debug mode. Otherwise,
             // we return null and the handle() method will just pass the request to the next middleware
-            // and we do not show a prerendered page.
+            // and we do not show a prerendered page.            
             if ($this->app['config']->get('app.debug')) {
                 throw $exception;
             }
@@ -194,7 +194,13 @@ class PrerenderMiddleware implements HttpKernelInterface
     {
         $body = $prerenderedResponse->getBody();
         $statusCode = $prerenderedResponse->getStatusCode();
-        $headers = $prerenderedResponse->getHeaders();
+        $headers = array(
+            'Cache-Control' => 'no-cache',
+            'Content-Type' => 'text/html',
+            'charset' => 'UTF-8',
+            'Date' => $prerenderedResponse->getHeader('Date')
+        );
+
         return new SymfonyResponse($body, $statusCode, $headers);
     }
 
